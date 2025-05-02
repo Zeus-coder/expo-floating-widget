@@ -1,30 +1,42 @@
 package expo.modules.floatingwidget
 
 import android.content.Context
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import expo.modules.kotlin.AppContext
-import expo.modules.kotlin.viewevent.EventDispatcher
-import expo.modules.kotlin.views.ExpoView
+import android.graphics.PixelFormat
+import android.os.Build
+import android.view.Gravity
+import android.view.View
+import android.view.WindowManager
 
-class ExpoFloatingWidgetView(context: Context, appContext: AppContext) : ExpoView(context, appContext) {
-  // Creates and initializes an event dispatcher for the `onLoad` event.
-  // The name of the event is inferred from the value and needs to match the event name defined in the module.
-  private val onLoad by EventDispatcher()
+object FloatingWindowManager {
+  private var floatingView: View? = null
+  private var windowManager: WindowManager? = null
 
-  // Defines a WebView that will be used as the root subview.
-  internal val webView = WebView(context).apply {
-    layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-    webViewClient = object : WebViewClient() {
-      override fun onPageFinished(view: WebView, url: String) {
-        // Sends an event to JavaScript. Triggers a callback defined on the view component in JavaScript.
-        onLoad(mapOf("url" to url))
-      }
-    }
+  fun show(context: Context, view: View) {
+    if (floatingView != null) return
+
+    val params = WindowManager.LayoutParams(
+      WindowManager.LayoutParams.WRAP_CONTENT,
+      WindowManager.LayoutParams.WRAP_CONTENT,
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+      else
+        WindowManager.LayoutParams.TYPE_PHONE,
+      WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+      PixelFormat.TRANSLUCENT
+    )
+    params.gravity = Gravity.TOP or Gravity.START
+    params.x = 100
+    params.y = 300
+
+    windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    windowManager?.addView(view, params)
+    floatingView = view
   }
 
-  init {
-    // Adds the WebView to the view hierarchy.
-    addView(webView)
+  fun hide(context: Context) {
+    floatingView?.let {
+      windowManager?.removeView(it)
+      floatingView = null
+    }
   }
 }
