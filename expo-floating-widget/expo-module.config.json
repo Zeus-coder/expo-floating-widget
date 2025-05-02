@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android", "web"],
+  "apple": {
+    "modules": ["ExpoFloatingWidgetModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.floatingwidget.ExpoFloatingWidgetModule"]
+  }
+}
